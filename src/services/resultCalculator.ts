@@ -27,8 +27,8 @@ export function calculateResult(answers: UserAnswer[]): QuizResult {
   const code: PersonalityCode = [
     scores.B >= scores.S ? 'B' : 'S',
     scores.H >= scores.F ? 'H' : 'F',
-    scores.P >= scores.E ? 'P' : 'A',
-    scores.D >= scores.A ? 'D' : 'E',
+    scores.P >= scores.E ? 'P' : 'E',
+    scores.D >= scores.A ? 'D' : 'A',
   ].join('') as PersonalityCode;
 
   return {
