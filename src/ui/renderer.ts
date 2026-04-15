@@ -3,15 +3,12 @@ import { calculateResult } from '../services/resultCalculator';
 import { renderWelcomeScreen } from './screens/welcomeScreen';
 import { renderQuizScreen } from './screens/quizScreen';
 import { renderResultScreen } from './screens/resultScreen';
-import type { QuizResult } from '../domain/types';
 
 type Screen = 'welcome' | 'quiz' | 'result';
 
 export class AppRenderer {
   private readonly root: HTMLElement;
   private quizService: QuizService;
-  private currentScreen: Screen = 'welcome';
-  private lastResult: QuizResult | null = null;
 
   constructor(rootId: string) {
     const el = document.getElementById(rootId);
@@ -25,25 +22,17 @@ export class AppRenderer {
   }
 
   private render(screen: Screen): void {
-    this.currentScreen = screen;
-
     switch (screen) {
       case 'welcome':
         this.root.innerHTML = renderWelcomeScreen();
         this.bindWelcome();
         break;
-
       case 'quiz':
         this.renderQuiz();
         break;
-
-      case 'result': {
-        const answers = this.quizService.getAnswers();
-        this.lastResult = calculateResult(answers);
-        this.root.innerHTML = renderResultScreen(this.lastResult);
-        this.bindResult();
+      case 'result':
+        this.renderResult();
         break;
-      }
     }
   }
 
@@ -51,10 +40,42 @@ export class AppRenderer {
     const question = this.quizService.getCurrentQuestion();
     const index = this.quizService.getCurrentIndex();
     const total = this.quizService.getTotalQuestions();
-    const canGoBack = index > 0;
-
-    this.root.innerHTML = renderQuizScreen(question, index, total, canGoBack);
+    this.root.innerHTML = renderQuizScreen(question, index, total);
     this.bindQuiz();
+  }
+
+  private renderResult(): void {
+    const answers = this.quizService.getAnswers();
+    const result = calculateResult(answers);
+    this.root.innerHTML = renderResultScreen(result);
+    this.loadResultImage();
+    this.bindResult();
+    window.scrollTo(0, 0);
+  }
+
+  /** Lazy-load the result image and fade it in, matching original shimmer behaviour. */
+  private loadResultImage(): void {
+    const container = this.root.querySelector<HTMLElement>('#res-image');
+    if (!container) return;
+
+    const imgPath = container.dataset['img'] ?? '';
+    const fallback = container.dataset['fallback'] ?? 'var(--primary)';
+
+    if (imgPath) {
+      const img = new Image();
+      img.src = imgPath;
+      img.onload = () => {
+        container.style.backgroundImage = `url(${imgPath})`;
+        container.classList.add('loaded');
+      };
+      img.onerror = () => {
+        container.style.background = `linear-gradient(135deg, #1e1e2e, ${fallback})`;
+        container.classList.add('loaded');
+      };
+    } else {
+      container.style.background = `linear-gradient(135deg, #1e1e2e, ${fallback})`;
+      container.classList.add('loaded');
+    }
   }
 
   // ── Event binding ────────────────────────────────────────────────────────
@@ -67,17 +88,12 @@ export class AppRenderer {
   }
 
   private bindQuiz(): void {
-    this.root.querySelectorAll('.option-btn').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const target = e.currentTarget as HTMLElement;
-        const option = target.dataset['option'] as 'A' | 'B';
-
-        // Visual feedback before advancing
-        target.classList.add('selected');
-
+    this.root.querySelectorAll<HTMLElement>('.btn-opt').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const option = btn.dataset['option'] as 'A' | 'B' | 'C';
+        btn.classList.add('selected');
         setTimeout(() => {
           this.quizService.submitAnswer(option);
-
           if (this.quizService.isComplete()) {
             this.render('result');
           } else {
@@ -97,32 +113,6 @@ export class AppRenderer {
     document.getElementById('retake-btn')?.addEventListener('click', () => {
       this.quizService.reset();
       this.render('welcome');
-    });
-
-    document.getElementById('share-btn')?.addEventListener('click', async () => {
-      if (!this.lastResult) return;
-
-      const { code, name } = this.lastResult.personalityType;
-      const shareText = `I got ${code} — ${name} on the JBTI Personality Test! 🎉\nTake it here: ${window.location.href}`;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({ text: shareText, url: window.location.href });
-        } catch (_) {
-          // User cancelled – that's fine
-        }
-      } else {
-        try {
-          await navigator.clipboard.writeText(shareText);
-          const btn = document.getElementById('share-btn');
-          if (btn) {
-            btn.textContent = '✓ Copied!';
-            setTimeout(() => { btn.textContent = 'Share Result'; }, 2000);
-          }
-        } catch (_) {
-          alert(shareText);
-        }
-      }
     });
   }
 }

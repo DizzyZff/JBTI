@@ -1,53 +1,57 @@
-/** The four personality dimensions measured by the JBTI test. */
-export type Dimension = 'JP' | 'BS' | 'TF' | 'IR';
-
 /**
- * Dimension poles:
- *   JP → J (Judicious) | P (Playful)
- *   BS → B (Bold)      | S (Sensitive)
- *   TF → T (Thinking)  | F (Feeling)
- *   IR → I (Idealist)  | R (Realist)
+ * The four personality dimensions measured by the JBTI-32 test.
+ *   BS → B (Bold/宽广)       | S (Sensitive/尖锐)
+ *   HF → H (Hard/刚硬)       | F (Fluid/流体)
+ *   PE → P (Precise/精准)    | E (Explosive/爆发)
+ *   DA → D (Dominant/主导)   | A (Adaptive/适配)
  */
-export interface DimensionScores {
-  JP: number; // 0–100, higher = more J
-  BS: number; // 0–100, higher = more B
-  TF: number; // 0–100, higher = more T
-  IR: number; // 0–100, higher = more I
-}
+export type Dimension = 'BS' | 'HF' | 'PE' | 'DA';
 
-export type PersonalityCode =
-  | 'JBTI' | 'JBTR' | 'JBFI' | 'JBFR'
-  | 'JSTI' | 'JSTR' | 'JSFI' | 'JSFR'
-  | 'PBTI' | 'PBTR' | 'PBFI' | 'PBFR'
-  | 'PSTI' | 'PSTR' | 'PSFI' | 'PSFR';
-
-export type OptionId = 'A' | 'B';
+export type OptionId = 'A' | 'B' | 'C';
 
 export interface Question {
+  /** 1-based index */
   id: number;
   text: string;
   dimension: Dimension;
-  /** Option A maps to the first pole (J, B, T, I). */
   optionA: string;
-  /** Option B maps to the second pole (P, S, F, R). */
   optionB: string;
+  optionC: string;
+  /** Score weight applied when choosing A or B (C splits evenly). */
+  weight: number;
 }
 
-export interface UserAnswer {
-  questionId: number;
-  selectedOption: OptionId;
-  dimension: Dimension;
+export interface DimensionScores {
+  B: number;
+  S: number;
+  H: number;
+  F: number;
+  P: number;
+  E: number;
+  D: number;
+  A: number;
 }
+
+export type PersonalityCode =
+  | 'BHPD' | 'BHPE' | 'BHAD' | 'BHAE'
+  | 'BFPD' | 'BFPE' | 'BFAD' | 'BFAE'
+  | 'SHPD' | 'SHPE' | 'SHAD' | 'SHAE'
+  | 'SFPD' | 'SFPE' | 'SFAD' | 'SFAE';
 
 export interface PersonalityType {
   code: PersonalityCode;
   name: string;
-  emoji: string;
-  tagline: string;
-  description: string;
-  strengths: string[];
-  challenges: string[];
-  compatibleWith: PersonalityCode[];
+  summary: string;
+  tactics: string;
+  rhythm: string;
+  psychology: string;
+  /** Relative path to result image, e.g. "img/BHPD.jpg" */
+  imagePath: string;
+}
+
+export interface UserAnswer {
+  questionIndex: number;
+  selectedOption: OptionId;
 }
 
 export interface QuizState {
@@ -59,5 +63,5 @@ export interface QuizState {
 export interface QuizResult {
   personalityCode: PersonalityCode;
   personalityType: PersonalityType;
-  dimensionScores: DimensionScores;
+  scores: DimensionScores;
 }

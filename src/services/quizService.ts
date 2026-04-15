@@ -5,11 +5,7 @@ export class QuizService {
   private state: QuizState;
 
   constructor() {
-    this.state = {
-      currentQuestionIndex: 0,
-      answers: [],
-      isComplete: false,
-    };
+    this.state = { currentQuestionIndex: 0, answers: [], isComplete: false };
   }
 
   getCurrentQuestion(): Question {
@@ -33,20 +29,17 @@ export class QuizService {
   }
 
   submitAnswer(selectedOption: OptionId): void {
-    const question = this.getCurrentQuestion();
-
     const answer: UserAnswer = {
-      questionId: question.id,
+      questionIndex: this.state.currentQuestionIndex,
       selectedOption,
-      dimension: question.dimension,
     };
 
-    const existingIndex = this.state.answers.findIndex(
-      (a) => a.questionId === question.id,
+    const existing = this.state.answers.findIndex(
+      (a) => a.questionIndex === this.state.currentQuestionIndex,
     );
 
-    if (existingIndex >= 0) {
-      this.state.answers[existingIndex] = answer;
+    if (existing >= 0) {
+      this.state.answers[existing] = answer;
     } else {
       this.state.answers.push(answer);
     }
@@ -67,10 +60,6 @@ export class QuizService {
   }
 
   reset(): void {
-    this.state = {
-      currentQuestionIndex: 0,
-      answers: [],
-      isComplete: false,
-    };
+    this.state = { currentQuestionIndex: 0, answers: [], isComplete: false };
   }
 }
