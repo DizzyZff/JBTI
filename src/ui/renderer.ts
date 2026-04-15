@@ -1,8 +1,10 @@
 import { QuizService } from '../services/quizService';
-import { calculateResult } from '../services/resultCalculator';
+import { calculateCustomResult } from '../services/customResultCalculator';
+import { setConfig, getConfig } from '../services/configService';
 import { renderWelcomeScreen } from './screens/welcomeScreen';
 import { renderQuizScreen } from './screens/quizScreen';
 import { renderResultScreen } from './screens/resultScreen';
+import type { QuizConfig } from '../domain/customConfig';
 
 type Screen = 'welcome' | 'quiz' | 'result';
 
@@ -46,7 +48,8 @@ export class AppRenderer {
 
   private renderResult(): void {
     const answers = this.quizService.getAnswers();
-    const result = calculateResult(answers);
+    const config = getConfig();
+    const result = calculateCustomResult(answers, config);
     this.root.innerHTML = renderResultScreen(result);
     this.loadResultImage();
     this.bindResult();
@@ -82,15 +85,44 @@ export class AppRenderer {
 
   private bindWelcome(): void {
     document.getElementById('start-btn')?.addEventListener('click', () => {
-      this.quizService.reset();
+      this.quizService.resetConfig();
       this.render('quiz');
+    });
+
+    const fileInput = document.getElementById('custom-json-input') as HTMLInputElement | null;
+    const statusEl = document.getElementById('upload-status');
+
+    fileInput?.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const json: QuizConfig = JSON.parse(e.target?.result as string);
+          setConfig(json);
+          this.quizService.resetConfig(json);
+          if (statusEl) {
+            statusEl.style.color = '#4ade80';
+            statusEl.textContent = `✓ 已加载：${json.questions.length} 题 / ${json.type_model.pairs.length} 维度`;
+          }
+        } catch (err) {
+          if (statusEl) {
+            statusEl.style.color = 'var(--primary)';
+            statusEl.textContent = `✗ 无效文件：${(err as Error).message}`;
+          }
+        }
+        // Reset input so the same file can be re-selected after an error.
+        fileInput.value = '';
+      };
+      reader.readAsText(file);
     });
   }
 
   private bindQuiz(): void {
     this.root.querySelectorAll<HTMLElement>('.btn-opt').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const option = btn.dataset['option'] as 'A' | 'B' | 'C';
+        const option = btn.dataset['option'] as string;
         btn.classList.add('selected');
         setTimeout(() => {
           this.quizService.submitAnswer(option);

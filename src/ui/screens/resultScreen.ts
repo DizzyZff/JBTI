@@ -1,33 +1,45 @@
-import type { QuizResult } from '../../domain/types';
+import type { CustomQuizResult } from '../../domain/customConfig';
 
-export function renderResultScreen(result: QuizResult): string {
-  const { personalityType: pt, personalityCode } = result;
-  const accentColor = personalityCode[0] === 'B' ? 'var(--primary)' : '#70a1ff';
+export function renderResultScreen(result: CustomQuizResult): string {
+  const { typeCode, resultText } = result;
+  const title = resultText?.title ?? typeCode;
+  const summary = resultText?.summary ?? '';
+  const accentColor = typeCode[0] === 'B' ? 'var(--primary)' : '#70a1ff';
+  const imagePath = resultText?.imagePath ?? '';
+
+  const richSections = resultText?.tactics || resultText?.rhythm || resultText?.psychology
+    ? `
+      <div>
+        ${resultText?.tactics ? `
+        <div class="detail-section">
+          <div class="section-tag">STRATEGY / 战术坐标</div>
+          <p style="margin:5px 0 0;font-size:0.95rem;">${resultText.tactics}</p>
+        </div>` : ''}
+        ${resultText?.rhythm ? `
+        <div class="detail-section">
+          <div class="section-tag">RHYTHM / 感官律动</div>
+          <p style="margin:5px 0 0;font-size:0.95rem;">${resultText.rhythm}</p>
+        </div>` : ''}
+        ${resultText?.psychology ? `
+        <div class="detail-section">
+          <div class="section-tag">PSYCHOLOGY / 心理本能</div>
+          <p style="margin:5px 0 0;font-size:0.95rem;">${resultText.psychology}</p>
+        </div>` : ''}
+      </div>`
+    : '';
 
   return `
     <div id="result-view" class="card fade-in">
-      <div id="res-image" class="res-img-container" data-img="${pt.imagePath}" data-fallback="${accentColor}"></div>
+      <div id="res-image" class="res-img-container" data-img="${imagePath}" data-fallback="${accentColor}"></div>
       <div style="font-size:1.2rem;color:var(--accent);font-weight:bold;letter-spacing:4px;margin-bottom:5px;">
-        SEQUENCE // ${personalityCode}
+        SEQUENCE // ${typeCode}
       </div>
-      <h1 style="color:#fff;margin:0 0 20px;font-size:2.4rem;font-weight:900;">${pt.name}</h1>
+      <h1 style="color:#fff;margin:0 0 20px;font-size:2.4rem;font-weight:900;">${title}</h1>
+      ${summary ? `
       <div class="summary-box">
-        <strong>原力特质报告：</strong>${pt.summary}
-      </div>
-      <div>
-        <div class="detail-section">
-          <div class="section-tag">STRATEGY / 战术坐标</div>
-          <p style="margin:5px 0 0;font-size:0.95rem;">${pt.tactics}</p>
-        </div>
-        <div class="detail-section">
-          <div class="section-tag">RHYTHM / 感官律动</div>
-          <p style="margin:5px 0 0;font-size:0.95rem;">${pt.rhythm}</p>
-        </div>
-        <div class="detail-section">
-          <div class="section-tag">PSYCHOLOGY / 心理本能</div>
-          <p style="margin:5px 0 0;font-size:0.95rem;">${pt.psychology}</p>
-        </div>
-      </div>
+        <strong>原力特质报告：</strong>${summary}
+      </div>` : ''}
+      ${richSections}
       <button id="retake-btn"
         style="width:100%;padding:18px;border-radius:20px;background:transparent;border:1px solid #444;color:#888;margin-top:25px;cursor:pointer;">
         重新初始化

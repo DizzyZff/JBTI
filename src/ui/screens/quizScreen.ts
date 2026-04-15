@@ -1,29 +1,23 @@
-import type { Question, OptionId } from '../../domain/types';
+import type { CustomQuestion, CustomOption } from '../../domain/customConfig';
 
-/** Fisher-Yates shuffle of the three answer options. */
-function shuffleOptions(
-  question: Question,
-): Array<{ id: OptionId; text: string }> {
-  const options: Array<{ id: OptionId; text: string }> = [
-    { id: 'A', text: question.optionA },
-    { id: 'B', text: question.optionB },
-    { id: 'C', text: question.optionC },
-  ];
-  for (let i = options.length - 1; i > 0; i--) {
+/** Fisher-Yates shuffle of the answer options. */
+function shuffleOptions(options: CustomOption[]): CustomOption[] {
+  const arr = [...options];
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [options[i], options[j]] = [options[j], options[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return options;
+  return arr;
 }
 
 export function renderQuizScreen(
-  question: Question,
+  question: CustomQuestion,
   currentIndex: number,
   total: number,
 ): string {
   const progress = ((currentIndex + 1) / total) * 100;
-  const displayLabels = ['A', 'B', 'C'];
-  const shuffled = shuffleOptions(question);
+  const displayLabels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const shuffled = shuffleOptions(question.options);
   const optionsHtml = shuffled
     .map(
       (opt, i) =>

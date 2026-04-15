@@ -1,26 +1,40 @@
-import { questions } from '../data/questions';
-import type { QuizState, UserAnswer, OptionId, Question } from '../domain/types';
+import type { QuizConfig, CustomQuestion, CustomUserAnswer } from '../domain/customConfig';
+import { getConfig } from './configService';
+
+interface CustomQuizState {
+  currentQuestionIndex: number;
+  answers: CustomUserAnswer[];
+  isComplete: boolean;
+}
 
 export class QuizService {
-  private state: QuizState;
+  private state: CustomQuizState;
+  private config: QuizConfig;
 
-  constructor() {
+  constructor(config?: QuizConfig) {
+    this.config = config ?? getConfig();
     this.state = { currentQuestionIndex: 0, answers: [], isComplete: false };
   }
 
-  getCurrentQuestion(): Question {
-    return questions[this.state.currentQuestionIndex];
+  /** Reload the config (e.g. after the admin uploads a new JSON). */
+  resetConfig(config?: QuizConfig): void {
+    this.config = config ?? getConfig();
+    this.reset();
+  }
+
+  getCurrentQuestion(): CustomQuestion {
+    return this.config.questions[this.state.currentQuestionIndex];
   }
 
   getTotalQuestions(): number {
-    return questions.length;
+    return this.config.questions.length;
   }
 
   getCurrentIndex(): number {
     return this.state.currentQuestionIndex;
   }
 
-  getAnswers(): UserAnswer[] {
+  getAnswers(): CustomUserAnswer[] {
     return [...this.state.answers];
   }
 
@@ -28,10 +42,10 @@ export class QuizService {
     return this.state.isComplete;
   }
 
-  submitAnswer(selectedOption: OptionId): void {
-    const answer: UserAnswer = {
+  submitAnswer(selectedOptionId: string): void {
+    const answer: CustomUserAnswer = {
       questionIndex: this.state.currentQuestionIndex,
-      selectedOption,
+      selectedOptionId,
     };
 
     const existing = this.state.answers.findIndex(
@@ -45,7 +59,7 @@ export class QuizService {
     }
 
     const nextIndex = this.state.currentQuestionIndex + 1;
-    if (nextIndex >= questions.length) {
+    if (nextIndex >= this.config.questions.length) {
       this.state.isComplete = true;
     } else {
       this.state.currentQuestionIndex = nextIndex;
