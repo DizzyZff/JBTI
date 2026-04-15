@@ -46,7 +46,7 @@ export interface PersonalityType {
   rhythm: string;
   psychology: string;
   /** Relative path to result image, e.g. "img/BHPD.jpg" */
-  imagePath: string;
+  imagePath?: string;
 }
 
 export interface UserAnswer {

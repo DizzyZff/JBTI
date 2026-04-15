@@ -148,7 +148,7 @@ const types: Record<PersonalityCode, PersonalityType> = {
 };
 
 export function getPersonalityType(code: PersonalityCode): PersonalityType {
-  return types[code];
+  return types[code] ?? types.BHPD;
 }
 
 export function getAllTypes(): PersonalityType[] {

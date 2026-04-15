@@ -46,6 +46,7 @@ export class QuizService {
 
     const nextIndex = this.state.currentQuestionIndex + 1;
     if (nextIndex >= questions.length) {
+      this.state.currentQuestionIndex = nextIndex;
       this.state.isComplete = true;
     } else {
       this.state.currentQuestionIndex = nextIndex;

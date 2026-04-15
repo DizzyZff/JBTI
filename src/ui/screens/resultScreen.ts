@@ -3,10 +3,11 @@ import type { QuizResult } from '../../domain/types';
 export function renderResultScreen(result: QuizResult): string {
   const { personalityType: pt, personalityCode } = result;
   const accentColor = personalityCode[0] === 'B' ? 'var(--primary)' : '#70a1ff';
+  const imagePath = pt.imagePath ?? '';
 
   return `
     <div id="result-view" class="card fade-in">
-      <div id="res-image" class="res-img-container" data-img="${pt.imagePath}" data-fallback="${accentColor}"></div>
+      <div id="res-image" class="res-img-container" data-img="${imagePath}" data-fallback="${accentColor}"></div>
       <div style="font-size:1.2rem;color:var(--accent);font-weight:bold;letter-spacing:4px;margin-bottom:5px;">
         SEQUENCE // ${personalityCode}
       </div>
